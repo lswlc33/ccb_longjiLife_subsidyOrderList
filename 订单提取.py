@@ -146,6 +146,39 @@ def writeToTex(shopOrders, isSaveAs=0):
             )
 
 
+def writeToCsv(shopOrders):
+    fileName = "订单提取_" + datetime.now().strftime("%Y-%m-%d-%H%M") + ".csv"
+    with open(fileName, "w") as f:
+        f.write(
+            "支付状态,支付单号,销售单号,顾客姓名,手机号码,送货地区,详细地址,下单时间,支付时间,商品编号,商品名称,补贴类型,补贴单价,门店单价,实付单价\n"
+        )
+        for order in shopOrders:
+            orderNumber = order["ccbPayOrderNumber"]
+            detail = getSalesOrderDetail(orderNumber).json()["data"]["payOrder"]
+            good = detail["goodsOrderList"][0]
+            payState = detail["payState"]
+            subsidyType = good["subsidyType"]
+            lineData = [
+                payStates[payState],
+                orderNumber,
+                detail["shopOrderNumber"],
+                str(detail["buyerName"]),
+                detail["buyerMobile"],
+                detail["address"].split(" ")[0],
+                "".join(detail["address"].split(" ")[1:]),
+                str(detail["createTime"]),
+                str(detail["payTime"]) if payState == 2 else "",
+                good["goodsCode"],
+                good["goodsName"],
+                subsidyTypes[subsidyType],
+                str(int(detail["subsidyTotalAmount"])),
+                str(int(detail["shopOriginalPrice"])),
+                str(int(detail["shopActualPayPrice"])),
+            ]
+            f.write(",".join(lineData))
+            f.write("\n")
+
+
 if __name__ == "__main__":
     os.system("cls")
 
@@ -157,7 +190,9 @@ if __name__ == "__main__":
     writeToTex(getAllSales())
 
     print("\n运行完成！")
-    
-    needSaveAs = input("是否另存为？(默认不,输入1另存)\n")
+
+    needSaveAs = input("是否另存为？\n(默认跳过)\n1 另存为txt\n2 另存为csv\n")
     if needSaveAs == "1":
         writeToTex(getAllSales(), 1)
+    elif needSaveAs == "2":
+        writeToCsv(getAllSales())
