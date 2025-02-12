@@ -1,4 +1,4 @@
-import requests, time
+import requests, time, os
 from datetime import datetime
 
 token = ""
@@ -37,14 +37,16 @@ def getTokenFromTxt():
     with open("token.txt", "r") as f:
         return f.read()
 
+
 # 构造headers添加token
 def generateHeaders():
     global headers
     headers["token"] = getTokenFromTxt()
 
+
 # 验证token
 def verifyToken():
-    if not token:
+    if not getTokenFromTxt():
         print("请先填写token")
     url = "https://jsyxfw.ccb.com/sxxf/ccb_equity_api_new/salesuser/getSalesActivity"
     res = requests.get(url, headers=headers).json()
@@ -102,10 +104,12 @@ def getAllSales():
 
 
 # 输出结果到txt
-def writeToTex(shopOrders):
+def writeToTex(shopOrders, isSaveAs=0):
     currentTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    with open("订单记录.txt", "w") as f:
+    fileName = "订单提取.txt"
+    if isSaveAs:
+        fileName = "订单提取_" + datetime.now().strftime("%Y-%m-%d-%H%M") + ".txt"
+    with open(fileName, "w") as f:
         f.write("更新时间：" + currentTime)
         for order in shopOrders:
             orderNumber = order["ccbPayOrderNumber"]
@@ -142,38 +146,18 @@ def writeToTex(shopOrders):
             )
 
 
-# 输出精简结果到txt
-def writeToTexSimple(shopOrders):
-    currentTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    with open("订单记录.txt", "w") as f:
-        f.write("更新时间：" + currentTime)
-        for order in shopOrders:
-            orderNumber = order["ccbPayOrderNumber"]
-            detail = getSalesOrderDetail(orderNumber).json()["data"]["payOrder"]
-            good = detail["goodsOrderList"][0]
-            payState = detail["payState"]
-            subsidyType = good["subsidyType"]
-            f.write("\n\n" + orderNumber)
-            f.write("\n" + detail["shopOrderNumber"])
-            f.write("\n" + good["goodsCode"])
-            f.write("\n" + str(detail["buyerName"]))
-            f.write("\n" + detail["buyerMobile"])
-            f.write("\n" + subsidyTypes[subsidyType])
-            f.write("\n" + str(int(detail["shopOriginalPrice"])))
-            f.write("\n" + str(int(detail["shopActualPayPrice"])))
-            f.write("\n" + str(int(detail["subsidyTotalAmount"])))
-            f.write("\n" + detail["address"])
-
-
 if __name__ == "__main__":
-    generateHeaders()   
+    os.system("cls")
+
+    generateHeaders()
 
     if not verifyToken():
         exit()
-    # while True:
-    #     writeToTex(getTodaySales())
-    #     time.sleep(15)
+
     writeToTex(getAllSales())
 
     print("\n运行完成！")
+    
+    needSaveAs = input("是否另存为？(默认不,输入1另存)\n")
+    if needSaveAs == "1":
+        writeToTex(getAllSales(), 1)
