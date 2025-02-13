@@ -109,7 +109,7 @@ def writeToTex(shopOrders, isSaveAs=0):
     fileName = "订单提取.txt"
     if isSaveAs:
         fileName = "订单提取_" + datetime.now().strftime("%Y-%m-%d-%H%M") + ".txt"
-    with open(fileName, "w") as f:
+    with open(fileName, "w", encoding="utf-8") as f:
         f.write("更新时间：" + currentTime)
         for order in shopOrders:
             orderNumber = order["ccbPayOrderNumber"]
@@ -144,11 +144,12 @@ def writeToTex(shopOrders, isSaveAs=0):
                 + "\t实付单价："
                 + str(int(detail["shopActualPayPrice"]))
             )
+    print("\n运行完成！")
 
 
 def writeToCsv(shopOrders):
     fileName = "订单提取_" + datetime.now().strftime("%Y-%m-%d-%H%M") + ".csv"
-    with open(fileName, "w") as f:
+    with open(fileName, "w", encoding="utf-8") as f:
         f.write(
             "支付状态,支付单号,销售单号,顾客姓名,手机号码,送货地区,详细地址,下单时间,支付时间,商品编号,商品名称,补贴类型,补贴单价,门店单价,实付单价\n"
         )
@@ -177,6 +178,7 @@ def writeToCsv(shopOrders):
             ]
             f.write(",".join(lineData))
             f.write("\n")
+    print("\n运行完成！")
 
 
 if __name__ == "__main__":
@@ -188,8 +190,6 @@ if __name__ == "__main__":
         exit()
 
     writeToTex(getAllSales())
-
-    print("\n运行完成！")
 
     needSaveAs = input("是否另存为？\n(默认跳过)\n1 另存为txt\n2 另存为csv\n")
     if needSaveAs == "1":
