@@ -108,7 +108,7 @@ def writeToTex(shopOrders, isSaveAs=0):
     currentTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     fileName = "订单提取.txt"
     if isSaveAs:
-        fileName = "订单提取_" + datetime.now().strftime("%Y-%m-%d-%H%M") + ".txt"
+        fileName = "data/订单提取_" + datetime.now().strftime("%Y-%m-%d-%H%M") + ".txt"
     with open(fileName, "w", encoding="utf-8") as f:
         f.write("更新时间：" + currentTime)
         for order in shopOrders:
@@ -148,7 +148,7 @@ def writeToTex(shopOrders, isSaveAs=0):
 
 
 def writeToCsv(shopOrders):
-    fileName = "订单提取_" + datetime.now().strftime("%Y-%m-%d-%H%M") + ".csv"
+    fileName = "data/订单提取_" + datetime.now().strftime("%Y-%m-%d-%H%M") + ".csv"
     with open(fileName, "w", encoding="utf-8") as f:
         f.write(
             "支付状态,支付单号,销售单号,顾客姓名,手机号码,送货地区,详细地址,下单时间,支付时间,商品编号,商品名称,补贴类型,补贴单价,门店单价,实付单价\n"
@@ -166,7 +166,7 @@ def writeToCsv(shopOrders):
                 str(detail["buyerName"]),
                 detail["buyerMobile"],
                 detail["address"].split(" ")[0],
-                "".join(detail["address"].split(" ")[1:]),
+                "".join(detail["address"].split("1")[1:]),
                 str(detail["createTime"]),
                 str(detail["payTime"]) if payState == 2 else "",
                 good["goodsCode"],
@@ -176,23 +176,30 @@ def writeToCsv(shopOrders):
                 str(int(detail["shopOriginalPrice"])),
                 str(int(detail["shopActualPayPrice"])),
             ]
-            f.write(",".join(lineData))
+            f.write(",".join(lineData).replace(" ", ""))
             f.write("\n")
     print("\n运行完成！")
 
 
-if __name__ == "__main__":
+# 初始化环境
+def initialize():
+    global headers, payStates, subsidyTypes
     os.system("cls")
-
     generateHeaders()
-
+    if not os.path.exists("data"):
+        os.mkdir("data")
     if not verifyToken():
         exit()
 
-    writeToTex(getAllSales())
+
+if __name__ == "__main__":
+    initialize()
+
+    SalesList = getAllSales()
+    writeToTex(SalesList)
 
     needSaveAs = input("是否另存为？\n(默认跳过)\n1 另存为txt\n2 另存为csv\n")
     if needSaveAs == "1":
-        writeToTex(getAllSales(), 1)
+        writeToTex(SalesList, 1)
     elif needSaveAs == "2":
-        writeToCsv(getAllSales())
+        writeToCsv(SalesList)
