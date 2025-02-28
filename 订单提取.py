@@ -25,6 +25,14 @@ headers = {
 }
 
 
+def fatPrice(num):
+    print(num)
+    if "." in str(num):
+        return float(num)
+    else:
+        return int(float(num))
+
+
 # 获取订单详情
 def getSalesOrderDetail(orderNumber):
     url = "https://jsyxfw.ccb.com/sxxf/ccb_equity_api_new/salesuser/getSalesOrderDetail"
@@ -99,7 +107,6 @@ def getAllSales():
         else:
             isNull = True
     print(f"共提取 {len(shopOrders)} 条已付款订单")
-
     return shopOrders
 
 
@@ -110,39 +117,37 @@ def writeToTex(shopOrders, isSaveAs=0):
     if isSaveAs:
         fileName = "data/订单提取_" + datetime.now().strftime("%Y-%m-%d-%H%M") + ".txt"
     with open(fileName, "w", encoding="utf-8") as f:
-        f.write("更新时间：" + currentTime)
+        f.write("更新时间: " + currentTime)
         for order in shopOrders:
             orderNumber = order["ccbPayOrderNumber"]
             detail = getSalesOrderDetail(orderNumber).json()["data"]["payOrder"]
             good = detail["goodsOrderList"][0]
             payState = detail["payState"]
             subsidyType = good["subsidyType"]
-            f.write("\n\n支付状态：" + payStates[payState])
-            f.write("\n支付单号：" + orderNumber)
-            f.write("\n销售单号：" + detail["shopOrderNumber"])
-            f.write("\n顾客姓名：" + str(detail["buyerName"]))
-            f.write("\n手机号码：" + detail["buyerMobile"])
-            f.write("\n送货地区：" + detail["address"].split(" ")[0])
-            f.write("\n详细地址：" + "".join(detail["address"].split(" ")[1:]))
+            f.write("\n\n支付状态: " + payStates[payState])
+            f.write("\n支付单号: " + orderNumber)
+            f.write("\n销售单号: " + detail["shopOrderNumber"])
+            f.write("\n顾客姓名: " + str(detail["buyerName"]))
+            f.write("\n手机号码: " + detail["buyerMobile"])
+            f.write("\n送货地区: " + detail["address"].split(" ")[0])
+            f.write("\n详细地址: " + "".join(detail["address"].split(" ")[1:]))
 
-            f.write("\n下单时间：" + str(detail["createTime"]))
-            if payState == 2:
-                f.write("\n支付时间：" + str(detail["payTime"]))
+            f.write("\n下单时间: " + str(detail["createTime"]))
 
-            f.write("\n商品编号：" + good["goodsCode"])
-            f.write("\n商品名称：" + good["goodsName"])
+            f.write("\n商品编号: " + good["goodsCode"])
+            f.write("\n商品名称: " + good["goodsName"])
             f.write(
-                "\n补贴类型："
+                "\n补贴类型: "
                 + subsidyTypes[subsidyType]
-                + "\t补贴单价："
-                + str(int(detail["subsidyTotalAmount"]))
+                + "\t补贴单价: "
+                + str(detail["subsidyTotalAmount"])
             )
 
             f.write(
-                "\n门店单价："
-                + str(int(detail["shopOriginalPrice"]))
-                + "\t实付单价："
-                + str(int(detail["shopActualPayPrice"]))
+                "\n门店单价: "
+                + str(detail["shopOriginalPrice"])
+                + "\t实付单价: "
+                + str(detail["shopActualPayPrice"])
             )
     print("\n运行完成！")
 
@@ -172,9 +177,9 @@ def writeToCsv(shopOrders):
                 good["goodsCode"],
                 good["goodsName"],
                 subsidyTypes[subsidyType],
-                str(int(detail["subsidyTotalAmount"])),
-                str(int(detail["shopOriginalPrice"])),
-                str(int(detail["shopActualPayPrice"])),
+                str(detail["subsidyTotalAmount"]),
+                str(detail["shopOriginalPrice"]),
+                str(detail["shopActualPayPrice"]),
             ]
             f.write(",".join(lineData).replace(" ", ""))
             f.write("\n")
@@ -196,7 +201,7 @@ if __name__ == "__main__":
     initialize()
 
     SalesList = getAllSales()
-    writeToTex(SalesList)
+    writeToTex(reversed(SalesList))
 
     needSaveAs = input("是否另存为？\n(默认跳过)\n1 另存为txt\n2 另存为csv\n")
     if needSaveAs == "1":
