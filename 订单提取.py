@@ -30,7 +30,7 @@ def fatPrice(num):
     if "." in str(num):
         return float(num)
     else:
-        return int(float(num))
+        return int(float(num))  # type: ignore
 
 
 # 获取订单详情
@@ -90,6 +90,18 @@ def getTodaySales():
     return newShopOrders
 
 
+def getRecentSales(pageNumbers=1):
+    pageNumbers = range(1, pageNumbers + 1)
+    newShopOrders = []
+    for i in pageNumbers:
+        shopOrders = getSalesPayAndRefundOrderList(i).json()["data"]["shopOrders"]
+        for order in shopOrders:
+            if order["payState"] == 2:
+                newShopOrders.append(order)
+    print(f"共提取 {len(shopOrders)} 条近日的订单")
+    return newShopOrders
+
+
 # 获取全部订单
 def getAllSales():
     shopOrders = []
@@ -125,11 +137,10 @@ def writeToTex(shopOrders, isSaveAs=0):
             payState = detail["payState"]
             subsidyType = good["subsidyType"]
             f.write("\n\n支付状态: " + payStates[payState])
-            f.write("\n支付单号: " + orderNumber)
-            f.write("\n销售单号: " + detail["shopOrderNumber"])
-            f.write("\n顾客姓名: " + str(detail["buyerName"]))
-            f.write("\n手机号码: " + detail["buyerMobile"])
-            f.write("\n送货地区: " + detail["address"].split(" ")[0])
+            f.write("\n支付单号 + 门店单号:\n" + orderNumber + " " + detail["shopOrderNumber"])
+            f.write(
+                "\n顾客姓名 + 顾客电话:\n" + str(detail["buyerName"]) + " " + detail["buyerMobile"]
+            )
             f.write("\n详细地址: " + "".join(detail["address"].split(" ")[1:]))
 
             f.write("\n下单时间: " + str(detail["createTime"]))
@@ -139,7 +150,7 @@ def writeToTex(shopOrders, isSaveAs=0):
             f.write(
                 "\n补贴类型: "
                 + subsidyTypes[subsidyType]
-                + "\t补贴单价: "
+                + "\t\t补贴单价: "
                 + str(detail["subsidyTotalAmount"])
             )
 
@@ -200,11 +211,18 @@ def initialize():
 if __name__ == "__main__":
     initialize()
 
-    SalesList = getAllSales()
+    # 获取所有订单
+    # SalesList = getAllSales()
+    # 获取今日订单
+    # SalesList = getTodaySales()
+    # 获取近日订单（传入参数为页数，不传入默认为 1 ）
+    SalesList = getRecentSales(3)
+    # 输出到根目录 订单提取.txt
     writeToTex(reversed(SalesList))
 
-    needSaveAs = input("是否另存为？\n(默认跳过)\n1 另存为txt\n2 另存为csv\n")
-    if needSaveAs == "1":
-        writeToTex(SalesList, 1)
-    elif needSaveAs == "2":
-        writeToCsv(SalesList)
+    # 如果需要保存文件
+    # needSaveAs = input("是否另存为？\n(默认跳过)\n1 另存为txt\n2 另存为csv\n")
+    # if needSaveAs == "1":
+    #     writeToTex(SalesList, 1)
+    # elif needSaveAs == "2":
+    #     writeToCsv(SalesList)
